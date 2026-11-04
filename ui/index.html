@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light" />
+  <link rel="icon" href="data:," />
+  <title>Serial Desk</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="connection-bar" aria-label="串口连接设置">
+      <div class="field port-field">
+        <label for="portSelect">串口</label>
+        <div class="control-row">
+          <select id="portSelect" aria-describedby="portDetail">
+            <option value="">正在扫描串口…</option>
+          </select>
+          <button class="button" id="refreshPorts" type="button" title="重新扫描串口">刷新</button>
+        </div>
+        <div class="field-note" id="portDetail">等待串口列表</div>
+      </div>
+
+      <div class="field baud-field">
+        <label for="baudInput">波特率</label>
+        <div class="combo">
+          <input
+            id="baudInput"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            role="combobox"
+            aria-autocomplete="none"
+            aria-haspopup="listbox"
+            aria-controls="baudMenu"
+            aria-expanded="false"
+          />
+          <button class="combo-toggle" id="baudMenuButton" type="button" aria-label="选择常用波特率" aria-haspopup="listbox" aria-expanded="false"></button>
+          <div class="combo-menu" id="baudMenu" role="listbox" aria-label="常用波特率" hidden></div>
+        </div>
+      </div>
+
+      <div class="field compact-field">
+        <label for="dataBitsSelect">数据位</label>
+        <select id="dataBitsSelect">
+          <option value="8">8</option>
+          <option value="7">7</option>
+          <option value="6">6</option>
+          <option value="5">5</option>
+        </select>
+      </div>
+
+      <div class="field compact-field">
+        <label for="paritySelect">校验</label>
+        <select id="paritySelect">
+          <option value="none">无</option>
+          <option value="even">偶</option>
+          <option value="odd">奇</option>
+        </select>
+      </div>
+
+      <div class="field compact-field">
+        <label for="stopBitsSelect">停止位</label>
+        <select id="stopBitsSelect">
+          <option value="1">1</option>
+          <option value="2">2</option>
+        </select>
+      </div>
+
+      <div class="field flow-field">
+        <label for="flowSelect">流控</label>
+        <select id="flowSelect">
+          <option value="none">无</option>
+          <option value="hardware">硬件 RTS/CTS</option>
+          <option value="software">软件 XON/XOFF</option>
+        </select>
+      </div>
+
+      <div class="connect-area">
+        <button class="button primary connect-button" id="connectBtn" type="button">
+          <span id="connectBtnLabel">打开串口</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="alert" id="connectionError" role="alert" hidden></div>
+    <div class="alert" id="notice" role="alert" hidden>
+      <span class="alert-text" id="noticeText"></span>
+      <button class="link-button" id="noticeDismiss" type="button">关闭</button>
+    </div>
+
+    <main class="workspace">
+      <section class="terminal-pane" aria-label="串口数据记录">
+        <div class="terminal-toolbar">
+          <div class="terminal-heading">
+            <span class="panel-title">数据记录</span>
+            <span class="state-label" id="streamState">未连接</span>
+            <span class="panel-subtitle" id="terminalSubtitle">打开串口后显示收发数据</span>
+          </div>
+          <div class="terminal-controls">
+            <div class="segmented" role="group" aria-label="记录显示格式">
+              <button class="segment active" id="viewTextBtn" type="button" aria-pressed="true">文本</button>
+              <button class="segment" id="viewHexBtn" type="button" aria-pressed="false">HEX</button>
+            </div>
+            <label class="inline-label encoding-label" for="encodingSelect" title="文本显示编码；发送仍按 UTF-8 或 HEX">编码
+              <select id="encodingSelect" aria-label="文本显示编码">
+                <option value="utf-8">UTF-8</option>
+                <option value="gbk">GBK</option>
+              </select>
+            </label>
+            <label class="check"><input type="checkbox" id="timestampToggle" checked /> 时间戳</label>
+            <label class="check"><input type="checkbox" id="followToggle" checked /> 自动跟随</label>
+            <button class="button" id="clearTerminal" type="button">清空</button>
+            <button class="button" id="showLogPane" type="button" aria-controls="logPanel" aria-expanded="false" title="展开日志面板（不影响日志记录）" hidden>展开日志</button>
+          </div>
+        </div>
+
+        <div class="log-view-bar" id="logViewBar" aria-label="日志回放状态" hidden>
+          <span class="log-view-tag">日志回放</span>
+          <span class="log-view-name" id="logViewName"></span>
+          <span class="log-view-meta" id="logViewMeta"></span>
+          <button class="button" id="exitLogView" type="button">退出回放</button>
+        </div>
+
+        <div class="terminal-notice" id="terminalNotice" hidden>
+          <span id="terminalNoticeText"></span>
+        </div>
+
+        <div class="terminal-scroll" id="terminalScroll">
+          <div class="terminal-empty" id="terminalEmpty">
+            <p class="empty-title" id="terminalEmptyTitle">未连接</p>
+            <p class="empty-copy" id="terminalEmptyCopy">选择串口并打开，收发数据会显示在这里。</p>
+          </div>
+          <div class="terminal-flow" id="terminalFlow" role="log" aria-label="串口接收与发送数据" aria-live="off"></div>
+        </div>
+
+        <button class="button jump-button" id="jumpLatest" type="button" hidden>回到最新</button>
+      </section>
+
+      <aside class="log-pane" id="logPanel" aria-label="保存日志设置">
+        <div class="log-header">
+          <div class="log-heading">
+            <span class="panel-title">保存日志</span>
+            <span class="log-format-inline">可逆转义文本</span>
+          </div>
+          <button class="button log-collapse" id="toggleLogPane" type="button" aria-expanded="true" aria-controls="logPanel" title="收起日志面板（不影响日志记录）">收起</button>
+        </div>
+
+        <div class="log-content">
+          <label class="check log-enable"><input type="checkbox" id="autoLogToggle" checked /> 自动记录收发数据</label>
+
+          <div class="log-field">
+            <label for="logIntervalInput">定时保存间隔</label>
+            <div class="inline-control">
+              <input id="logIntervalInput" type="number" min="5" max="3600" step="1" inputmode="numeric" />
+              <span>秒</span>
+            </div>
+          </div>
+
+          <div class="log-field">
+            <label>保存目录</label>
+            <div class="path-row">
+              <span class="path-value" id="logDirLabel">尚未选择</span>
+              <button class="button" id="pickLogDir" type="button">更改</button>
+            </div>
+          </div>
+
+          <div class="log-field">
+            <label>当前文件</label>
+            <span class="path-value" id="logFilePath">—</span>
+          </div>
+
+          <div class="log-status">
+            <div class="log-state-line">
+              <span class="dot" id="logStatusDot" data-state="idle" aria-hidden="true"></span>
+              <span id="logStatusText">连接后自动开始</span>
+              <span class="log-size" id="logSizeText">—</span>
+            </div>
+            <div class="meta-line" id="logSaveText">每 30 秒保存</div>
+            <div class="meta-line muted" id="logLockNote" hidden>连接期间不可修改记录开关与目录。</div>
+            <div class="error-text" id="logError" role="alert" hidden></div>
+          </div>
+
+          <div class="log-actions">
+            <button class="button" id="openLogFile" type="button" title="打开已保存的 .log 日志文件">打开日志</button>
+            <button class="button" id="saveLogNow" type="button" disabled>立即保存</button>
+            <button class="button" id="openLogFolder" type="button">打开目录</button>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <section class="send-pane" aria-label="发送">
+      <div class="send-toolbar">
+        <span class="panel-title">发送</span>
+        <div class="segmented" role="group" aria-label="发送格式">
+          <button class="segment active" id="sendTextBtn" type="button" aria-pressed="true">文本</button>
+          <button class="segment" id="sendHexBtn" type="button" aria-pressed="false">HEX</button>
+        </div>
+        <label class="inline-label" for="lineEndingSelect">结束符
+          <select id="lineEndingSelect">
+            <option value="none">无</option>
+            <option value="cr">CR</option>
+            <option value="lf">LF</option>
+            <option value="crlf">CRLF</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="clearAfterSend" /> 发送后清空</label>
+        <span class="hint">Ctrl + Enter 发送</span>
+      </div>
+
+      <div class="send-body">
+        <label class="sr-only" for="sendInput">发送内容</label>
+        <textarea id="sendInput" rows="2" spellcheck="false" autocomplete="off" placeholder="输入要发送的数据"></textarea>
+        <button class="button primary send-button" id="sendBtn" type="button" disabled>
+          <span>发送</span>
+        </button>
+      </div>
+
+      <div class="send-meta">
+        <span id="sendMeta">0 字节</span>
+        <span id="sendPreview" class="send-preview"></span>
+        <span id="inputModeHint" class="input-mode">UTF-8</span>
+        <span id="sendError" class="error-text" role="alert" hidden></span>
+      </div>
+    </section>
+
+    <footer class="status-bar" aria-label="会话状态">
+      <div class="status-group">
+        <span class="dot" id="sessionDot" data-state="off" aria-hidden="true"></span>
+        <span id="sessionState">未连接</span>
+        <span class="separator" aria-hidden="true"></span>
+        <span id="sessionPort">—</span>
+        <span id="sessionParams"></span>
+      </div>
+      <div class="status-message" id="statusMessage" role="status" aria-live="polite"></div>
+      <div class="status-group status-numbers">
+        <span>RX <span id="rxCounter">0 B</span></span>
+        <span>TX <span id="txCounter">0 B</span></span>
+        <span>会话 <span id="sessionDuration">00:00</span></span>
+        <span>日志 <span id="logFooter">未开始</span></span>
+      </div>
+    </footer>
+  </div>
+
+  <div class="boot-cover" id="bootCover">正在加载…</div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# Build output
+src-tauri/target/
+release/
+
+# UI test tooling
+tools/ui-check/node_modules/
+tools/ui-check/package-lock.json
+
+# Local test output
+artifacts/*.json
+artifacts/crop-*.png
+artifacts/close-flush-failure.png
+artifacts/exe-icon.png
+
+# OS clutter
+Thumbs.db
+desktop.ini
