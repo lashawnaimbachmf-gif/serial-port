@@ -121,7 +121,6 @@ const el = {
   terminalNoticeText: byId("terminalNoticeText"),
   jumpLatest: byId("jumpLatest"),
   toggleLogPane: byId("toggleLogPane"),
-  showLogPane: byId("showLogPane"),
   sendTextBtn: byId("sendTextBtn"),
   sendHexBtn: byId("sendHexBtn"),
   lineEndingSelect: byId("lineEndingSelect"),
@@ -1311,11 +1310,11 @@ function setLogPaneHidden(hidden, { persist = true } = {}) {
   const next = Boolean(hidden);
   state.logPaneHidden = next;
   workspace?.classList.toggle("is-log-hidden", next);
-  setText(el.toggleLogPane, "收起");
+  const label = next ? "展开日志面板（不影响日志记录）" : "收起日志面板（不影响日志记录）";
+  el.toggleLogPane.classList.toggle("is-collapsed", next);
   el.toggleLogPane.setAttribute("aria-expanded", String(!next));
-  el.toggleLogPane.title = "收起日志面板（不影响日志记录）";
-  el.toggleLogPane.setAttribute("aria-label", "收起日志面板（不影响日志记录）");
-  el.showLogPane.hidden = !next;
+  el.toggleLogPane.title = label;
+  el.toggleLogPane.setAttribute("aria-label", label);
   if (persist) {
     try {
       window.localStorage.setItem(LOG_PANE_KEY, next ? "1" : "0");
@@ -1844,12 +1843,7 @@ function bindEvents() {
   el.openLogFile.addEventListener("click", () => void openLogFromDialog());
   el.exitLogView.addEventListener("click", exitLogView);
   el.toggleLogPane.addEventListener("click", () => {
-    setLogPaneHidden(true);
-    el.showLogPane.focus();
-  });
-  el.showLogPane.addEventListener("click", () => {
-    setLogPaneHidden(false);
-    el.toggleLogPane.focus();
+    setLogPaneHidden(!state.logPaneHidden);
   });
 
   el.sendTextBtn.addEventListener("click", () => setSendMode("text"));

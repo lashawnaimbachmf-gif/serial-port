@@ -137,6 +137,29 @@ button:disabled {
   color: #9aa1a8;
 }
 
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  padding: 0;
+  flex: none;
+  color: var(--muted);
+}
+
+.icon-button:hover:not(:disabled),
+.icon-button[aria-expanded="false"] {
+  color: var(--text);
+}
+
+.icon-button > svg {
+  display: block;
+}
+
+.icon-button.is-collapsed > svg {
+  transform: rotate(180deg);
+}
+
 .link-button {
   padding: 2px 4px;
   border: 0;
@@ -909,12 +932,6 @@ input[type="checkbox"] {
   align-items: baseline;
   gap: 8px;
   min-width: 0;
-}
-
-.log-collapse {
-  height: 22px;
-  padding: 0 7px;
-  font-size: 10.5px;
 }
 
 .log-format-inline {

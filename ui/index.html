@@ -112,7 +112,11 @@
             <label class="check"><input type="checkbox" id="timestampToggle" checked /> 时间戳</label>
             <label class="check"><input type="checkbox" id="followToggle" checked /> 自动跟随</label>
             <button class="button" id="clearTerminal" type="button">清空</button>
-            <button class="button" id="showLogPane" type="button" aria-controls="logPanel" aria-expanded="false" title="展开日志面板（不影响日志记录）" hidden>展开日志</button>
+            <button class="button icon-button" id="toggleLogPane" type="button" aria-controls="logPanel" aria-expanded="true" aria-label="收起日志面板（不影响日志记录）" title="收起日志面板（不影响日志记录）">
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false">
+                <path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -144,7 +148,6 @@
             <span class="panel-title">保存日志</span>
             <span class="log-format-inline">可逆转义文本</span>
           </div>
-          <button class="button log-collapse" id="toggleLogPane" type="button" aria-expanded="true" aria-controls="logPanel" title="收起日志面板（不影响日志记录）">收起</button>
         </div>
 
         <div class="log-content">
